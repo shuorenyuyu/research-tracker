@@ -54,7 +54,7 @@ class AzureSummarizer:
                 messages=[
                     {
                         "role": "system",
-                        "content": "你是一位专业的AI和机器人领域研究分析师，擅长用中文总结学术论文的核心内容。"
+                        "content": "你是一位专业的AI和机器人领域研究分析师，擅长用中文撰写详细、深入的学术论文解读。"
                     },
                     {
                         "role": "user",
@@ -62,7 +62,7 @@ class AzureSummarizer:
                     }
                 ],
                 temperature=0.7,
-                max_tokens=1000
+                max_tokens=3000
             )
             
             summary = response.choices[0].message.content.strip()
@@ -120,7 +120,7 @@ class AzureSummarizer:
         venue = paper.get('venue', 'Unknown')
         citations = paper.get('citation_count', 0)
         
-        return f"""请用中文总结以下学术论文的核心内容（300-500字）：
+        return f"""请用中文撰写一篇详细的学术论文解读（800-1500字），采用以下五个模块结构：
 
 标题：{title}
 作者：{authors}
@@ -131,14 +131,39 @@ class AzureSummarizer:
 摘要：
 {abstract}
 
-请包括：
-1. 研究背景和动机
-2. 主要方法/技术
-3. 核心贡献和创新点
-4. 实验结果（如有）
-5. 潜在应用场景
+请按照以下五个模块撰写：
 
-用简洁、专业的中文表达，便于投资人快速理解。"""
+## 一、研究背景
+- 介绍该研究所处的学术和技术背景
+- 说明当前领域存在的问题或挑战
+- 阐述为什么需要进行这项研究
+
+## 二、核心问题
+- 明确指出本研究要解决的核心问题
+- 说明该问题的重要性和影响
+- 对比现有方法的不足之处
+
+## 三、方法创新
+- 详细描述研究采用的新方法或技术
+- 解释创新点在哪里（算法、架构、流程等）
+- 说明与传统方法的本质区别
+
+## 四、关键结果
+- 总结实验或理论分析的主要发现
+- 列举重要的性能指标或突破
+- 说明结果的统计显著性和可靠性
+
+## 五、应用价值
+- 分析该研究的实际应用场景
+- 评估技术落地的可行性
+- 展望未来可能的发展方向和影响范围
+
+撰写要求：
+- 总字数控制在800-1500字之间
+- 使用专业但易懂的中文表达
+- 每个模块内容充实，避免空洞描述
+- 突出论文的创新性和实用价值
+- 适合投资人和技术决策者阅读"""
     
     def _build_insights_prompt(self, paper: Dict, summary: str) -> str:
         """Build prompt for investment insights generation"""
