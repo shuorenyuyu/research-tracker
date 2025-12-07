@@ -177,9 +177,11 @@ class AzureSummarizer:
 ✅ 总字数严格控制在800-1500字
 ✅ 每个模块必须包含具体数据、案例或对比（避免空洞描述）
 ✅ 使用投资人易懂的语言，减少学术术语
+✅ **首次出现的缩写/术语必须给出完整解释**（例如："SCARE（Surgical CAse REport，外科病例报告）指南"）
 ✅ 突出商业价值和投资机会
 ✅ 客观评估，包含风险提示
-✅ 每个关键观点都要有依据（来自摘要或常识推理）"""
+✅ 每个关键观点都要有依据（来自摘要或常识推理）
+✅ 在文末添加"术语解释"部分，列出所有重要缩写和专业术语的中文说明"""
     
     def _build_insights_prompt(self, paper: Dict, summary: str) -> str:
         """Build prompt for investment insights generation"""
