@@ -63,3 +63,7 @@ data/*.pdf
 data/*.json
 data/*.db
 data/logs/*.log
+
+# Generated WeChat articles
+data/wechat_articles/*.html
+data/wechat_articles/*.md
