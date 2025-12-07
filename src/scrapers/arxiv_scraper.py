@@ -60,19 +60,27 @@ class ArxivScraper(BaseScraper):
         
         return papers
     
-    def get_recent_papers(self, keywords: List[str], days: int = 1) -> List[Dict[str, Any]]:
+    def get_recent_papers(self, keywords: List[str], days: int = 60, 
+                          min_age_days: int = 0) -> List[Dict[str, Any]]:
         """
-        Get recent papers from arXiv
+        Get recent papers from arXiv with optional minimum age for citation accumulation
         
         Args:
             keywords: List of keywords to search
-            days: Look back this many days
+            days: Look back this many days from min_age_days (default 60)
+            min_age_days: Minimum age in days (0 = include all recent papers)
             
         Returns:
             List of papers
         """
         all_papers = []
-        cutoff_date = datetime.now() - timedelta(days=days)
+        from datetime import timezone
+        
+        # Calculate date range
+        cutoff_date_end = datetime.now(timezone.utc) - timedelta(days=min_age_days)
+        cutoff_date_start = cutoff_date_end - timedelta(days=days)
+        
+        self.logger.info(f"Fetching papers from {cutoff_date_start.date()} to {cutoff_date_end.date()}")
         
         # arXiv categories for AI/Robotics
         categories = [
@@ -92,13 +100,26 @@ class ArxivScraper(BaseScraper):
                 
                 self.logger.info(f"Fetching arXiv papers for: '{keyword}'")
                 
-                papers = self.search(query, max_results=30)
+                # Fetch many more papers to reach older dates
+                # arXiv returns newest first, so we need to fetch enough to reach our target window
+                max_results = 500 if min_age_days > 30 else 100
+                papers = self.search(query, max_results=max_results)
                 
-                # Filter by submission date
-                recent_papers = [
-                    p for p in papers 
-                    if p.get('publication_date') and p['publication_date'] >= cutoff_date
-                ]
+                # Filter by submission date window
+                if min_age_days > 0:
+                    # Filter to specific date range
+                    recent_papers = [
+                        p for p in papers 
+                        if p.get('publication_date') and 
+                        cutoff_date_start <= p['publication_date'] <= cutoff_date_end
+                    ]
+                else:
+                    # Just use cutoff from today
+                    recent_papers = [
+                        p for p in papers 
+                        if p.get('publication_date') and 
+                        p['publication_date'] >= cutoff_date_start
+                    ]
                 
                 all_papers.extend(recent_papers)
                 

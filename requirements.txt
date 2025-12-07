@@ -3,6 +3,7 @@ scholarly>=1.7.11
 arxiv>=2.0.0
 requests>=2.31.0
 beautifulsoup4>=4.12.0
+semanticscholar>=0.8.0  # For citation data enrichment
 
 # Data Processing
 pandas>=2.1.0

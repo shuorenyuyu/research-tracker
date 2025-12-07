@@ -1,27 +1,162 @@
-# research-tracker
+# Research Tracker 📚🤖
 
-An intelligent research assistant that fetches, analyzes, and summarizes the newest Google Scholar papers in AI and robotics. Designed to help investors stay ahead of technological trends and make data-driven investment decisions based on cutting-edge research developments.
+> Automated research paper tracking system for AI/Robotics investment research
 
-## Features
+An intelligent system that **fetches one high-quality research paper daily**, generates Chinese summaries with Azure OpenAI, and provides investment insights. Designed for investors who want to stay informed without information overload.
 
-- 🔍 **Automated Paper Discovery**: Fetches the latest research papers from Google Scholar in AI and robotics domains
-- 📊 **Intelligent Analysis**: Analyzes and summarizes key findings, methodologies, and implications
-- 💡 **Investment Insights**: Identifies emerging trends and breakthrough technologies relevant to investment decisions
-- 📈 **Trend Tracking**: Monitors research developments over time to spot patterns and opportunities
-- 🤖 **AI-Powered Summaries**: Generates concise, actionable summaries tailored for investment professionals
+## 🎯 Philosophy: Quality Over Quantity
 
-## Use Cases
+Instead of drowning in 100+ papers daily, we deliver **one carefully selected paper per day**:
+- ✅ Ranked by **citation count** (community validation)
+- ✅ Filtered by **AI/Robotics/ML keywords**
+- ✅ **Deduplicated** (never see the same paper twice)
+- ✅ **Chinese summary** + investment insights
+- ✅ Runs **fully automated** at UTC 00:00
 
-- Stay informed about cutting-edge AI and robotics research
-- Identify promising technologies and research directions
-- Make data-driven investment decisions based on academic trends
-- Track competitive landscapes in specific technology domains
-- Discover emerging research teams and institutions
+## 🏗️ Architecture
 
-## Getting Started
+### Phase 1: Data Collection (✅ Complete)
+**Source**: Semantic Scholar API (provides built-in citation data)
+- Fetches top 100 papers by citations
+- Filters for AI/ML/Robotics/Deep Learning keywords
+- Stores ONE new paper per day (highest citations)
+- Deduplication prevents re-fetching
 
-Coming soon...
+### Phase 2: AI Summarization (🚧 In Progress)
+**Engine**: Azure OpenAI (GPT-4)
+- Generates **Chinese summaries** (300-500 characters)
+- Extracts **investment insights** (200-400 characters)
+- Analyzes: tech maturity, commercialization potential, related industries
+- Processes one unprocessed paper daily
 
-## License
+### Phase 3: Publishing (📋 Planned)
+**Destination**: Lark (飞书) Bot
+- Daily digest sent to Lark channel
+- Formatted with title, summary, insights, citations
+- Link to original paper
 
-This project is licensed under the MIT License.
+## 🚀 Quick Start
+
+### 1. Clone & Setup
+```bash
+git clone git@github.com:shuorenyuyu/research-tracker.git
+cd research-tracker
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 2. Configure Environment
+```bash
+cp .env.example .env
+# Edit .env with your Azure OpenAI credentials:
+# - AZURE_OPENAI_ENDPOINT
+# - AZURE_OPENAI_API_KEY
+# - AZURE_OPENAI_DEPLOYMENT_NAME
+```
+
+### 3. Run Daily Fetch (One Paper)
+```bash
+# Manual test (fetches one paper)
+python3 src/scheduler/daily_scheduler.py --run-once
+
+# Check what was fetched
+python3 scripts/show_papers.py
+```
+
+### 4. Process with Azure OpenAI
+```bash
+# Summarize the unprocessed paper
+python3 src/scheduler/process_papers.py --one
+```
+
+### 5. Deploy as Background Service (macOS)
+```bash
+# Install LaunchAgent (runs at UTC 00:00 daily)
+./deployment/manage_scheduler.sh install
+
+# Check status
+./deployment/manage_scheduler.sh status
+
+# View logs
+./deployment/manage_scheduler.sh logs
+```
+
+## 📊 Database Schema
+
+**papers.db** (SQLite):
+- `paper_id` - Unique identifier (deduplication key)
+- `title`, `authors`, `abstract`, `year`, `venue`
+- `citation_count` - Semantic Scholar citations
+- `summary_zh` - Chinese summary (Azure OpenAI)
+- `investment_insights` - Investment analysis (Azure OpenAI)
+- `processed` - Boolean flag for AI processing
+- `published` - Boolean flag for Lark publishing
+
+## 🛠️ Project Structure
+
+```
+research-tracker/
+├── src/
+│   ├── config/          # Settings & environment
+│   ├── database/        # SQLAlchemy models & repository
+│   ├── scrapers/        # Semantic Scholar API client
+│   ├── processors/      # Azure OpenAI summarizer
+│   ├── publishers/      # Lark Bot (Phase 3)
+│   └── scheduler/       # Daily automation scripts
+├── scripts/             # Utility scripts
+│   ├── show_papers.py   # View database contents
+│   └── daily_fetch.py   # Legacy manual fetch
+├── deployment/          # macOS LaunchAgent config
+├── data/                # SQLite database & logs
+└── tests/               # Unit tests
+```
+
+## 📖 How It Works
+
+### Daily Workflow
+1. **00:00 UTC** - Scheduler wakes up
+2. **Fetch** - Query Semantic Scholar for top 100 papers by citations
+3. **Filter** - Check against database for duplicates
+4. **Store** - Add highest-citation new paper to database
+5. **Summarize** - Azure OpenAI generates Chinese summary + insights
+6. **Publish** - Send to Lark channel (Phase 3)
+
+### Deduplication Strategy
+- Each paper has a unique `paper_id` (from Semantic Scholar)
+- Before adding, check if `paper_id` exists in database
+- Only add if it's a new paper
+- Result: **Never fetch the same paper twice**
+
+## 🔑 Key Features
+
+### Citation-Based Ranking
+Papers sorted by **citation count** (not recency):
+- High citations = community validation
+- Proven research with measurable impact
+- Better signal for investment decisions
+
+### Semantic Scholar Integration
+- Free API (100 requests / 5 minutes)
+- Built-in citation data (no extra enrichment needed)
+- Comprehensive metadata (authors, venue, year, DOI)
+
+### Azure OpenAI Summarization
+- **Chinese summaries** tailored for Chinese-speaking investors
+- **Investment insights** analyze commercialization potential
+- Structured prompts ensure consistent output quality
+
+## 📝 Example Output
+
+**Paper**: "Attention Is All You Need"  
+**Citations**: 114,000+  
+**中文摘要**: 本文提出了Transformer架构，完全基于注意力机制，摒弃了传统的循环神经网络。该模型在机器翻译任务上取得了突破性成果，训练速度显著提升...  
+**投资洞察**: 技术成熟度：应用就绪。商业化潜力：已广泛应用于ChatGPT等产品。相关行业：AI芯片(NVIDIA)、云计算(Microsoft Azure)、大模型创业公司。投资建议：关注Transformer衍生技术的商业化落地...
+
+## 🤝 Contributing
+
+This is a personal investment research tool. Feel free to fork and adapt for your own use.
+
+## 📄 License
+
+MIT License

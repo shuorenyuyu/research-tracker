@@ -35,6 +35,7 @@ class Paper(Base):
     abstract = Column(Text)
     url = Column(String(500))
     pdf_url = Column(String(500))
+    doi = Column(String(200))  # DOI identifier
     
     # Metrics
     citation_count = Column(Integer, default=0)
@@ -75,15 +76,28 @@ class Paper(Base):
             "published": self.published
         }
 
+# Global engine and session
+_engine = None
+_Session = None
 
-def init_database(database_url: str):
+
+def init_database(database_url: str = "sqlite:///data/papers.db"):
     """Initialize database and create tables"""
-    engine = create_engine(database_url)
-    Base.metadata.create_all(engine)
-    return engine
+    global _engine, _Session
+    
+    _engine = create_engine(database_url, echo=False)
+    Base.metadata.create_all(_engine)
+    _Session = sessionmaker(bind=_engine)
+    
+    return _engine
 
 
-def get_session(engine):
-    """Get database session"""
-    Session = sessionmaker(bind=engine)
-    return Session()
+def get_session():
+    """Get a database session"""
+    global _Session
+    
+    if _Session is None:
+        # Initialize with default if not yet initialized
+        init_database()
+    
+    return _Session()

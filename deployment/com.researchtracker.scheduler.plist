@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.researchtracker.scheduler</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/Mac/code/venv/bin/python3</string>
+        <string>/Users/Mac/code/src/scheduler/daily_scheduler.py</string>
+        <string>--time</string>
+        <string>00:00</string>
+        <string>--timezone</string>
+        <string>UTC</string>
+    </array>
+    
+    <key>WorkingDirectory</key>
+    <string>/Users/Mac/code</string>
+    
+    <key>StandardOutPath</key>
+    <string>/Users/Mac/code/logs/scheduler.log</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/Users/Mac/code/logs/scheduler.error.log</string>
+    
+    <key>RunAtLoad</key>
+    <true/>
+    
+    <key>KeepAlive</key>
+    <true/>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/Mac/code/venv/bin:/usr/local/bin:/usr/bin:/bin</string>
+    </dict>
+</dict>
+</plist>

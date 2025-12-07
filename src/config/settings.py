@@ -19,9 +19,11 @@ class Settings:
     # Database
     DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATA_DIR}/papers.db")
     
-    # Volcano Engine API (火山方舟)
-    VOLCANO_API_KEY = os.getenv("VOLCANO_API_KEY", "")
-    VOLCANO_API_ENDPOINT = os.getenv("VOLCANO_API_ENDPOINT", "")
+    # Azure OpenAI API
+    AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT", "")
+    AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY", "")
+    AZURE_OPENAI_DEPLOYMENT_NAME = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME", "gpt-4")
+    AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
     
     # Lark Bot (飞书)
     LARK_WEBHOOK_URL = os.getenv("LARK_WEBHOOK_URL", "")
@@ -48,6 +50,16 @@ class Settings:
         """Create necessary directories if they don't exist"""
         cls.DATA_DIR.mkdir(exist_ok=True)
         cls.LOG_DIR.mkdir(exist_ok=True)
+    
+    @property
+    def database_url(self):
+        """Get database URL with proper path resolution"""
+        return str(self.DATABASE_URL)
+    
+    @property
+    def keywords(self):
+        """Get search keywords as list"""
+        return self.KEYWORDS
 
 
 # Initialize directories
