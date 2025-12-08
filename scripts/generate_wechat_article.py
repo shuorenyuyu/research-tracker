@@ -50,8 +50,40 @@ def generate_wechat_article():
     else:
         date_str = datetime.now().strftime('%Y年%m月%d日')
     
+    # Generate engaging title based on paper title
+    paper_title = paper[0]
+    
+    # Create a concise, engaging Chinese title
+    title_mapping = {
+        "GPT-4": "GPT-4技术报告：多模态大模型的新突破",
+        "LLaMA": "LLaMA：开源高效的基础语言模型",
+        "Visual Instruction": "视觉指令微调：多模态AI的新范式",
+        "Segment Anything": "Segment Anything：通用图像分割的革命性突破",
+        "Constitutional AI": "宪法AI：通过AI反馈实现无害化",
+        "Tree of Thoughts": "思维树：大模型的深思熟虑式问题解决",
+        "RLHF": "人类反馈强化学习：让AI更懂人类意图",
+        "Transformer": "Transformer：注意力机制颠覆深度学习",
+        "Attention Is All You Need": "Attention机制：改变AI的关键突破"
+    }
+    
+    # Find matching title or use generic one
+    article_title = None
+    for key, title in title_mapping.items():
+        if key.lower() in paper_title.lower():
+            article_title = title
+            break
+    
+    if not article_title:
+        # Generate generic title with paper's main topic
+        if len(paper_title) > 30:
+            article_title = f"{paper_title[:30]}...：AI前沿研究解读"
+        else:
+            article_title = f"{paper_title}：AI前沿研究解读"
+    
     # Format WeChat article
-    article = f"""# 🔬 AI前沿论文解读 ({date_str})
+    article = f"""# 🔬 {article_title}
+
+> 📅 {date_str} | 📊 {paper[4]} 次引用 | 🏛️ {paper[3]}
 
 ---
 
@@ -117,7 +149,7 @@ def generate_wechat_article():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{paper[0]}</title>
+    <title>{article_title}</title>
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
@@ -254,7 +286,7 @@ def generate_wechat_article():
 </head>
 <body>
     <div class="container">
-        <h1>🔬 AI前沿论文解读 ({date_str})</h1>
+        <h1>🔬 {article_title}</h1>
         
         <div class="meta">
             <p><strong>📄 标题：</strong>{paper[0]}</p>
