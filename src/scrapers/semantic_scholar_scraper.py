@@ -211,7 +211,7 @@ class SemanticScholarScraper(BaseScraper):
         
         Args:
             keywords: List of keywords to search
-            days: Look back this many days
+            days: Look back this many days (parameter kept for compatibility but year range used instead)
             
         Returns:
             List of papers sorted by citation count
@@ -222,15 +222,21 @@ class SemanticScholarScraper(BaseScraper):
         # Fields of study for AI/Robotics
         fields = ["Computer Science", "Engineering"]
         
+        # Use 3-year window to get papers with citations (2023-present)
+        # Brand new papers (2025 only) often have 0 citations
+        year_filter = f"{current_year - 2}-"
+        
+        self.logger.info(f"Fetching papers from {current_year - 2} onwards (to ensure citation data)")
+        
         for keyword in keywords:
             try:
                 self.logger.info(f"Fetching Semantic Scholar papers for: '{keyword}'")
                 
-                # Search with year filter (current year only for recent papers)
+                # Search with 3-year window to get papers with accumulated citations
                 papers = self.search(
                     query=keyword,
                     max_results=100,
-                    year_filter=f"{current_year}-",
+                    year_filter=year_filter,
                     fields_of_study=fields
                 )
                 
