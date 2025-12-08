@@ -37,8 +37,21 @@ def generate_wechat_article():
     
     paper = result
     
+    # Get UTC date from fetched_at timestamp
+    from datetime import datetime as dt
+    fetched_at = paper[9]  # fetched_at is the 10th column (index 9)
+    if fetched_at:
+        try:
+            # Parse the timestamp (format: "2025-12-07 10:39:06.763998")
+            fetch_date = dt.strptime(fetched_at.split('.')[0], '%Y-%m-%d %H:%M:%S')
+            date_str = fetch_date.strftime('%Y年%m月%d日')
+        except:
+            date_str = datetime.now().strftime('%Y年%m月%d日')
+    else:
+        date_str = datetime.now().strftime('%Y年%m月%d日')
+    
     # Format WeChat article
-    article = f"""# 🔬 今日AI前沿论文解读
+    article = f"""# 🔬 AI前沿论文解读 ({date_str})
 
 ---
 
@@ -77,7 +90,7 @@ def generate_wechat_article():
 > 💡 **关于本系列**
 > 每日精选一篇高引用AI/机器人领域论文，提供中文深度解读和投资分析。
 > 
-> 📅 发布时间：{datetime.now().strftime('%Y年%m月%d日')}
+> 📅 发布时间：{date_str}
 
 ---
 
@@ -210,11 +223,38 @@ def generate_wechat_article():
             margin: 5px;
             font-size: 14px;
         }}
+        .glossary {{
+            background: #fff9e6;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ffa500;
+        }}
+        .glossary h4 {{
+            color: #d97706;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }}
+        .glossary ul {{
+            list-style: none;
+            padding-left: 0;
+            margin: 0;
+        }}
+        .glossary li {{
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }}
+        .glossary li:before {{
+            content: "📌";
+            position: absolute;
+            left: 0;
+        }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔬 今日AI前沿论文解读</h1>
+        <h1>🔬 AI前沿论文解读 ({date_str})</h1>
         
         <div class="meta">
             <p><strong>📄 标题：</strong>{paper[0]}</p>
@@ -240,7 +280,7 @@ def generate_wechat_article():
         <div class="footer">
             <p>💡 <strong>关于本系列</strong></p>
             <p>每日精选一篇高引用AI/机器人领域论文，提供中文深度解读和投资分析。</p>
-            <p>📅 发布时间：{datetime.now().strftime('%Y年%m月%d日')}</p>
+            <p>📅 发布时间：{date_str}</p>
             
             <div class="tags">
                 <span class="tag">#AI前沿</span>
@@ -271,30 +311,102 @@ def _format_html_content(text):
     # Simple markdown to HTML conversion
     lines = text.split('\n')
     html_lines = []
+    in_list = False
+    in_glossary = False
     
     for line in lines:
+        # Check for glossary section
+        if '术语速查' in line and line.startswith('###'):
+            html_lines.append('<div class="glossary">')
+            html_lines.append('<h4>📚 术语速查</h4>')
+            html_lines.append('<ul>')
+            in_glossary = True
+            in_list = True
+            continue
+        
+        # Handle headings
         if line.startswith('#### '):
+            if in_list:
+                html_lines.append('</ul>')
+                if in_glossary:
+                    html_lines.append('</div>')
+                    in_glossary = False
+                in_list = False
             html_lines.append(f'<h5>{line[5:]}</h5>')
         elif line.startswith('### '):
+            if in_list:
+                html_lines.append('</ul>')
+                if in_glossary:
+                    html_lines.append('</div>')
+                    in_glossary = False
+                in_list = False
             html_lines.append(f'<h4>{line[4:]}</h4>')
         elif line.startswith('## '):
+            if in_list:
+                html_lines.append('</ul>')
+                if in_glossary:
+                    html_lines.append('</div>')
+                    in_glossary = False
+                in_list = False
             html_lines.append(f'<h3>{line[3:]}</h3>')
+        elif line.startswith('# '):
+            if in_list:
+                html_lines.append('</ul>')
+                if in_glossary:
+                    html_lines.append('</div>')
+                    in_glossary = False
+                in_list = False
+            html_lines.append(f'<h2>{line[2:]}</h2>')
         elif line.startswith('- '):
+            if not in_list:
+                if in_glossary:
+                    # Already have <ul> open for glossary
+                    pass
+                else:
+                    html_lines.append('<ul>')
+                in_list = True
             # Convert **bold** to <strong>
-            formatted_line = line[2:].replace('**', '<strong>', 1).replace('**', '</strong>', 1)
-            # Handle multiple bold sections
-            while '**' in formatted_line:
-                formatted_line = formatted_line.replace('**', '<strong>', 1).replace('**', '</strong>', 1)
+            formatted_line = line[2:]
+            formatted_line = _convert_bold_to_strong(formatted_line)
             html_lines.append(f'<li>{formatted_line}</li>')
-        elif line.strip():
+        elif line.strip() and not line.strip().startswith('---'):
+            # Close list if we're in one and hit a non-list line
+            if in_list and not in_glossary:
+                html_lines.append('</ul>')
+                in_list = False
+            if in_glossary and line.strip().startswith('---'):
+                html_lines.append('</ul>')
+                html_lines.append('</div>')
+                in_glossary = False
+                in_list = False
+                continue
             # Convert **bold** to <strong> in paragraphs
-            formatted_line = line
-            while '**' in formatted_line:
-                formatted_line = formatted_line.replace('**', '<strong>', 1).replace('**', '</strong>', 1)
+            # Skip horizontal rules (---)
+            formatted_line = _convert_bold_to_strong(line)
             html_lines.append(f'<p>{formatted_line}</p>')
-        # Skip empty lines - no <br> tags
+        elif line.strip().startswith('---') and in_glossary:
+            # End of glossary section
+            html_lines.append('</ul>')
+            html_lines.append('</div>')
+            in_glossary = False
+            in_list = False
+        # Skip empty lines and horizontal rules
+    
+    # Close any open tags
+    if in_list:
+        html_lines.append('</ul>')
+        if in_glossary:
+            html_lines.append('</div>')
     
     return '\n'.join(html_lines)
+
+
+def _convert_bold_to_strong(text):
+    """Convert markdown **bold** to HTML <strong> tags"""
+    result = text
+    while '**' in result:
+        result = result.replace('**', '<strong>', 1).replace('**', '</strong>', 1)
+    return result
 
 
 if __name__ == '__main__':

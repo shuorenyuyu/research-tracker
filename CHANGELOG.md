@@ -23,8 +23,9 @@ All notable changes to the Research Tracker project will be documented in this f
   - `src/scheduler/process_papers.py` - Daily processing script
   - Structured prompts for consistent output quality
 
-- 📋 **Phase 3 Planned**: Lark Bot publishing
-  - Framework ready in `src/publishers/`
+- 📋 **Phase 3 Complete**: WeChat Article Export
+  - `scripts/generate_wechat_article.py` - Export formatted articles
+  - Manual publishing workflow
 
 - 📚 **Documentation Overhaul**:
   - `README.md` - Complete rewrite with quick start guide
@@ -113,11 +114,11 @@ All notable changes to the Research Tracker project will be documented in this f
 - [ ] Integrate into daily scheduler
 - [ ] Error handling and retry logic
 
-### Phase 3: Publishing (Planned)
-- [ ] Lark Bot webhook integration
-- [ ] Message card formatting
-- [ ] Daily digest automation
-- [ ] Mark papers as `published=True`
+### Phase 3: Article Export (Complete)
+- [x] WeChat article generation script
+- [x] Markdown and HTML formatting
+- [x] Manual publishing workflow
+- [ ] Automated export to file on daily schedule
 
 ### Future Enhancements
 - [ ] Multi-language support (English summaries)

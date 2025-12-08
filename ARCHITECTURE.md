@@ -82,36 +82,42 @@ Update Database (summary_zh, investment_insights, processed=True)
 - **Total per paper**: ~1,900 tokens (~$0.01 USD with GPT-4)
 - **Monthly cost**: ~$0.30 USD (30 papers)
 
-### Phase 3: Publishing 📋
-**Status**: Planned  
-**Frequency**: Daily after Phase 2  
-**Destination**: Lark (飞书) Webhook
+### Phase 3: Article Export ✅
+**Status**: Complete  
+**Frequency**: On-demand or daily after Phase 2  
+**Destination**: WeChat-formatted Markdown/HTML
 
 ```
-Processed Papers (processed=True, published=False)
+Processed Papers (processed=True)
          ↓
-Format Lark Message Card
+Generate WeChat Article (Markdown + HTML)
          ↓
-POST to Lark Webhook
+Save to data/wechat_articles/
          ↓
-Mark as published=True
+Manual copy/paste to WeChat 公众号 editor
 ```
 
-**Message Format** (Lark Card):
+**Article Format** (WeChat):
 ```markdown
-📄 今日论文推荐
+# 🔬 今日AI前沿论文解读
 
+## 📄 论文信息
 标题: [Paper Title]
 作者: [Authors]
-年份: [Year] | 引用: [Citation Count]
+发表: [Venue] ([Year])
+引用数: [Citation Count] 次
 
-📝 中文摘要
-[summary_zh]
+## 📖 深度解读
+[summary_zh with 5 structured sections]
 
-💡 投资洞察
+## 💰 投资视角
 [investment_insights]
 
-🔗 [阅读原文]([paper_url])
+## 📌 原文摘要
+[abstract]
+
+> 💡 关于本系列
+> 每日精选一篇高引用AI/机器人领域论文...
 ```
 
 ## 🗄️ Database Schema
@@ -137,7 +143,7 @@ Mark as published=True
 | `keywords` | VARCHAR(500) | Search keywords used | `"deep learning"` |
 | `fetched_at` | DATETIME | When scraped | `"2025-12-07 00:00:05"` |
 | `processed` | BOOLEAN | AI summarized? | `False` → `True` |
-| `published` | BOOLEAN | Sent to Lark? | `False` → `True` |
+| `published` | BOOLEAN | Exported to article? | `False` → `True` |
 
 **Indexes**:
 - `paper_id` (UNIQUE) - Fast deduplication lookup
@@ -160,9 +166,6 @@ src/
 │
 ├── processors/
 │   └── azure_summarizer.py      # Azure OpenAI client
-│
-├── publishers/
-│   └── lark_publisher.py        # Lark Bot integration (Phase 3)
 │
 └── scheduler/
     ├── daily_scheduler.py       # Phase 1: Fetch papers
@@ -191,11 +194,12 @@ python3 src/scheduler/process_papers.py --one
   → Marks processed=True
   → Logs: "✅ Successfully processed: [title]"
 
-# Phase 3: Publish (00:00:45 - 00:01:00) [Planned]
-python3 src/scheduler/publish_papers.py --one
-  → Finds processed, unpublished paper
-  → Sends to Lark channel
-  → Marks published=True
+# Phase 3: Export (00:00:45 - 00:00:50) [On-demand]
+python3 scripts/generate_wechat_article.py
+  → Finds latest processed paper
+  → Generates WeChat-formatted article
+  → Saves Markdown + HTML to data/wechat_articles/
+  → Ready for manual copy/paste to WeChat
 ```
 
 **Total Runtime**: ~60 seconds  
@@ -241,9 +245,6 @@ AZURE_OPENAI_API_KEY=sk-xxxxxxxxxxxxx
 AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
 AZURE_OPENAI_API_VERSION=2024-02-15-preview
 
-# Lark (required for Phase 3)
-LARK_WEBHOOK_URL=https://open.feishu.cn/open-apis/bot/v2/hook/xxxxx
-
 # Database (default: SQLite)
 DATABASE_URL=sqlite:///data/papers.db
 ```
@@ -258,7 +259,6 @@ DATABASE_URL=sqlite:///data/papers.db
 **Log Files** (`data/logs/`):
 - `scheduler.log` - Daily fetch operations
 - `processor.log` - Azure OpenAI summaries
-- `publisher.log` - Lark publishing (Phase 3)
 
 **Key Metrics**:
 ```bash
@@ -340,7 +340,6 @@ python3 scripts/show_papers.py  # Verify results
 
 - [Semantic Scholar API Docs](https://api.semanticscholar.org/)
 - [Azure OpenAI Quickstart](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart)
-- [Lark Bot Development](https://open.feishu.cn/document/ukTMukTMukTM/ucTM5YjL3ETO24yNxkjN)
 - [APScheduler Documentation](https://apscheduler.readthedocs.io/)
 
 ---

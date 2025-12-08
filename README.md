@@ -24,16 +24,11 @@ Instead of drowning in 100+ papers daily, we deliver **one carefully selected pa
 
 ### Phase 2: AI Summarization (🚧 In Progress)
 **Engine**: Azure OpenAI (GPT-4)
-- Generates **Chinese summaries** (300-500 characters)
+- Generates **Chinese summaries** (800-1500 characters)
 - Extracts **investment insights** (200-400 characters)
 - Analyzes: tech maturity, commercialization potential, related industries
 - Processes one unprocessed paper daily
-
-### Phase 3: Publishing (📋 Planned)
-**Destination**: Lark (飞书) Bot
-- Daily digest sent to Lark channel
-- Formatted with title, summary, insights, citations
-- Link to original paper
+- Exports to WeChat-formatted articles for manual publishing
 
 ## 🚀 Quick Start
 
@@ -91,7 +86,7 @@ python3 src/scheduler/process_papers.py --one
 - `summary_zh` - Chinese summary (Azure OpenAI)
 - `investment_insights` - Investment analysis (Azure OpenAI)
 - `processed` - Boolean flag for AI processing
-- `published` - Boolean flag for Lark publishing
+- `published` - Boolean flag for export tracking
 
 ## 🛠️ Project Structure
 
@@ -102,7 +97,6 @@ research-tracker/
 │   ├── database/        # SQLAlchemy models & repository
 │   ├── scrapers/        # Semantic Scholar API client
 │   ├── processors/      # Azure OpenAI summarizer
-│   ├── publishers/      # Lark Bot (Phase 3)
 │   └── scheduler/       # Daily automation scripts
 ├── scripts/             # Utility scripts
 │   ├── show_papers.py   # View database contents
@@ -120,7 +114,7 @@ research-tracker/
 3. **Filter** - Check against database for duplicates
 4. **Store** - Add highest-citation new paper to database
 5. **Summarize** - Azure OpenAI generates Chinese summary + insights
-6. **Publish** - Send to Lark channel (Phase 3)
+6. **Export** - Generate WeChat-formatted article (manual publishing)
 
 ### Deduplication Strategy
 - Each paper has a unique `paper_id` (from Semantic Scholar)
