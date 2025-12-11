@@ -32,7 +32,9 @@ class PaperRepository:
                 citation_count=paper_data.get('citation_count', 0),
                 doi=paper_data.get('doi'),
                 keywords=paper_data.get('keywords'),
-                fetched_at=paper_data.get('fetched_at', datetime.utcnow())
+                fetched_at=paper_data.get('fetched_at', datetime.utcnow()),
+                processed=paper_data.get('processed', False),
+                published=paper_data.get('published', False)
             )
         else:
             paper = paper_data
@@ -153,3 +155,12 @@ class PaperRepository:
     def count_unprocessed(self) -> int:
         """Count papers waiting for AI summarization"""
         return self.session.query(Paper).filter(Paper.processed == False).count()
+    
+    def get_all_papers(self, limit: int = None, offset: int = 0) -> List[Paper]:
+        """Get all papers with optional pagination"""
+        query = self.session.query(Paper).order_by(Paper.fetched_at.desc())
+        if offset:
+            query = query.offset(offset)
+        if limit:
+            query = query.limit(limit)
+        return query.all()
