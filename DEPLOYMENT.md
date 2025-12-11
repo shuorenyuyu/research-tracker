@@ -2,6 +2,15 @@
 
 Quick reference for deploying Research Tracker to a remote Linux server.
 
+## 🌐 Production Server
+
+- **Azure VM**: `20.51.208.13` (East US)
+- **DNS URL**: http://alpha-research.eastus.cloudapp.azure.com/
+- **SSH Alias**: `research-azure` (configured in `~/code/.ssh-config`)
+- **User**: `azureuser`
+- **Path**: `/home/azureuser/research-tracker`
+- **Paper Selection**: Recent one year (current_year - 1 onwards) to ensure meaningful citation counts
+
 ## 📦 Three Ways to Deploy
 
 ### 1️⃣ **Quick Deploy (from your Mac)**

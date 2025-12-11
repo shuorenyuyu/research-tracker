@@ -4,7 +4,7 @@
 
 **One Quality Paper Per Day > 100 Unread Papers**
 
-This system is designed around the principle that **curation beats volume** for investment research. Instead of overwhelming users with hundreds of papers, we deliver one carefully selected, high-citation paper daily with actionable insights.
+This system is designed around the principle that **curation beats volume** for investment research. Instead of overwhelming users with hundreds of papers, we deliver one carefully selected, high-citation paper daily from cutting-edge fields (AI, Robotics, New Energy, Biotechnology, Quantum Computing, etc.) with actionable insights.
 
 ## 🏗️ Three-Phase Architecture
 
@@ -14,9 +14,12 @@ This system is designed around the principle that **curation beats volume** for 
 **Source**: Semantic Scholar API
 
 ```
-Keywords: ["artificial intelligence", "machine learning", "deep learning", "robotics"]
+Keywords: ["artificial intelligence", "machine learning", "deep learning", "robotics", 
+          "new energy", "battery technology", "solar energy", 
+          "biotechnology", "gene editing", "synthetic biology",
+          "quantum computing", "autonomous systems"]
          ↓
-Semantic Scholar Search (top 100 by citations)
+Semantic Scholar Search (top 100 by citations, year: current_year - 1 onwards)
          ↓
 Deduplication Check (paper_id lookup)
          ↓
@@ -28,6 +31,7 @@ SQLite Database (data/papers.db)
 **Key Design Decisions**:
 - **Semantic Scholar over arXiv**: Built-in citation data (no extra enrichment needed)
 - **Citation ranking over recency**: Community validation matters more than novelty
+- **Recent one year window**: Papers from (current_year - 1) onwards have time to accumulate meaningful citations
 - **One paper per day**: Prevents database bloat, ensures each paper gets attention
 - **Deduplication by paper_id**: Never fetch same paper twice
 

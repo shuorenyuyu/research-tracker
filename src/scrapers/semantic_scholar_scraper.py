@@ -222,29 +222,32 @@ class SemanticScholarScraper(BaseScraper):
         # Fields of study for AI/Robotics
         fields = ["Computer Science", "Engineering"]
         
-        # Use 3-year window to get papers with citations (2023-present)
-        # Brand new papers (2025 only) often have 0 citations
-        year_filter = f"{current_year - 2}-"
+        # Use 1-year window to get papers with citations
+        year_filter = f"{current_year - 1}-"
         
-        self.logger.info(f"Fetching papers from {current_year - 2} onwards (to ensure citation data)")
+        self.logger.info(f"Fetching papers from {current_year - 1} onwards (to ensure citation data)")
         
-        for keyword in keywords:
-            try:
-                self.logger.info(f"Fetching Semantic Scholar papers for: '{keyword}'")
-                
-                # Search with 3-year window to get papers with accumulated citations
-                papers = self.search(
-                    query=keyword,
-                    max_results=100,
-                    year_filter=year_filter,
-                    fields_of_study=fields
-                )
-                
-                all_papers.extend(papers)
-                
-            except Exception as e:
-                self.logger.error(f"Error fetching Semantic Scholar papers for '{keyword}': {e}")
-                continue
+        # OPTIMIZATION: Use only the FIRST keyword to reduce API calls and avoid rate limiting (429 errors)
+        # Semantic Scholar search is broad enough that one keyword returns diverse results
+        primary_keyword = keywords[0] if keywords else "artificial intelligence"
+        
+        try:
+            self.logger.info(f"Fetching Semantic Scholar papers for: '{primary_keyword}' (optimized for rate limits)")
+            
+            # Single search to avoid rate limiting
+            papers = self.search(
+                query=primary_keyword,
+                max_results=100,
+                year_filter=year_filter,
+                fields_of_study=fields
+            )
+            
+            all_papers.extend(papers)
+            
+        except Exception as e:
+            self.logger.error(f"Error fetching Semantic Scholar papers for '{primary_keyword}': {e}")
+            # Don't try other keywords to avoid more rate limiting
+            return []
         
         # Remove duplicates by paper_id
         unique_papers = []

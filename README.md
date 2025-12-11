@@ -1,8 +1,8 @@
 # Research Tracker 📚🤖
 
-> Automated research paper tracking system for AI/Robotics investment research
+> Automated research paper tracking system for AI, Robotics, New Energy, Biotechnology, and emerging technology investment research
 
-An intelligent system that **fetches one high-quality research paper daily**, generates Chinese summaries with Azure OpenAI, and provides investment insights. Designed for investors who want to stay informed without information overload.
+An intelligent system that **fetches one high-quality research paper daily**, generates Chinese summaries with Azure OpenAI, and provides investment insights. Designed for investors who want to stay informed about cutting-edge technologies without information overload.
 
 ## 🎯 Philosophy: Quality Over Quantity
 
@@ -17,16 +17,16 @@ Instead of drowning in 100+ papers daily, we deliver **one carefully selected pa
 
 ### Phase 1: Data Collection (✅ Complete)
 **Source**: Semantic Scholar API (provides built-in citation data)
-- Fetches top 100 papers by citations
-- Filters for AI/ML/Robotics/Deep Learning keywords
+- Fetches top 100 papers by citations from **recent one year** (ensures papers have time to accumulate citations)
+- Filters for **AI/ML/Robotics + New Energy/Battery + Biotechnology/Gene Editing + Quantum Computing** and other emerging tech keywords
 - Stores ONE new paper per day (highest citations)
 - Deduplication prevents re-fetching
 
 ### Phase 2: AI Summarization (🚧 In Progress)
 **Engine**: Azure OpenAI (GPT-4)
 - Generates **Chinese summaries** (800-1500 characters)
-- Extracts **investment insights** (200-400 characters)
-- Analyzes: tech maturity, commercialization potential, related industries
+- Extracts **investment insights** (200-400 characters) with specific industry/company names
+- Analyzes: tech maturity, commercialization potential, related industries across AI, new energy, biotech, and emerging fields
 - Processes one unprocessed paper daily
 - Exports to WeChat-formatted articles for manual publishing
 

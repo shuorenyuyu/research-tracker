@@ -37,7 +37,7 @@ class Settings:
         keyword.strip() 
         for keyword in os.getenv(
             "KEYWORDS", 
-            "artificial intelligence,machine learning,deep learning,robotics"
+            "artificial intelligence,machine learning,deep learning,robotics,new energy,battery technology,solar energy,biotechnology,gene editing,synthetic biology,quantum computing,autonomous systems"
         ).split(",")
     ]
     
