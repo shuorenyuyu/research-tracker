@@ -187,16 +187,19 @@ class TestSemanticScholarScraper:
         
         assert len(enriched) == 2
     
-    @patch('requests.get')
+    @patch('src.scrapers.semantic_scholar_scraper.requests.get')
     def test_get_with_retry(self, mock_get, scraper, sample_ss_paper):
         """Test retry logic"""
-        # First call fails, second succeeds
+        # First call fails with HTTPError, second succeeds
+        import requests
         mock_response_fail = Mock()
         mock_response_fail.status_code = 500
+        mock_response_fail.raise_for_status.side_effect = requests.HTTPError("500 Server Error")
         
         mock_response_success = Mock()
         mock_response_success.status_code = 200
         mock_response_success.json.return_value = sample_ss_paper
+        mock_response_success.raise_for_status.return_value = None
         
         mock_get.side_effect = [mock_response_fail, mock_response_success]
         

@@ -10,7 +10,7 @@ from apscheduler.triggers.cron import CronTrigger
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from src.utils.logger import setup_logger
-from src.scrapers.arxiv_scraper import ArxivScraper
+# from src.scrapers.arxiv_scraper import ArxivScraper  # Disabled - incompatible with Python 3.6
 from src.scrapers.semantic_scholar_scraper import SemanticScholarScraper
 from src.database.models import init_database
 from src.database.repository import PaperRepository
@@ -30,7 +30,7 @@ class DailyPaperScheduler:
         self.paper_repo = PaperRepository()
         
         # Initialize scrapers with API key if available
-        self.arxiv_scraper = ArxivScraper(self.logger, rate_limit_delay=1)
+        # self.arxiv_scraper = ArxivScraper(self.logger, rate_limit_delay=1)  # Disabled
         ss_api_key = self.settings.SEMANTIC_SCHOLAR_API_KEY or None
         self.ss_scraper = SemanticScholarScraper(
             self.logger, 

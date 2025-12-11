@@ -96,6 +96,9 @@ class SemanticScholarScraper(BaseScraper):
             
         Returns:
             Paper dict with citation data or None
+            
+        Raises:
+            requests.HTTPError: For non-404 HTTP errors (enables retry logic)
         """
         try:
             # Clean arXiv ID (remove version if present)
@@ -115,9 +118,14 @@ class SemanticScholarScraper(BaseScraper):
                 self.logger.debug(f"Paper not found in Semantic Scholar: arXiv:{clean_id}")
                 return None
             else:
+                # Raise exception for retry logic on server errors
                 self.logger.warning(f"Semantic Scholar API error for {arxiv_id}: {response.status_code}")
+                response.raise_for_status()
                 return None
                 
+        except requests.HTTPError:
+            # Re-raise HTTP errors for retry logic
+            raise
         except Exception as e:
             self.logger.error(f"Error fetching paper {arxiv_id} from Semantic Scholar: {e}")
             return None
