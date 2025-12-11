@@ -83,14 +83,18 @@ class TestDailySchedulerMissingLines:
         mock_settings.return_value = mock_settings_instance
         
         mock_repo_class.return_value = Mock()
-        mock_scraper_class.return_value = Mock()
+        
+        # Mock scraper that returns empty list
+        mock_scraper = Mock()
+        mock_scraper.get_recent_papers.return_value = []
+        mock_scraper_class.return_value = mock_scraper
         
         # Mock scheduler
         mock_scheduler = Mock()
         mock_bs.return_value = mock_scheduler
         
         scheduler = DailyPaperScheduler()
-        scheduler.start(run_time="00:00")
+        scheduler.start(schedule_time="00:00")
         
         # Should add job and start scheduler
         assert mock_scheduler.add_job.called
@@ -243,25 +247,28 @@ class TestBaseScraperMissingLines:
     """Test for base_scraper.py lines 26, 40"""
     
     def test_get_recent_papers_not_implemented(self):
-        """Test get_recent_papers raises NotImplementedError"""
+        """Test _normalize_paper default implementation"""
         from src.scrapers.base_scraper import BaseScraper
         from src.utils.logger import setup_logger
         
         logger = setup_logger("test")
         
-        # Create minimal concrete implementation
+        # Create minimal concrete implementation with all abstract methods
         class MinimalScraper(BaseScraper):
             def search(self, query, max_results=100):
                 return []
             
-            def _normalize_paper(self, paper):
-                return paper
+            def get_recent_papers(self, keywords, days=1):
+                return []
         
         scraper = MinimalScraper(logger)
         
-        # get_recent_papers should raise NotImplementedError
-        with pytest.raises(NotImplementedError):
-            scraper.get_recent_papers(['test'], days=7)
+        # Test _normalize_paper default implementation
+        result = scraper._normalize_paper({})
+        
+        assert 'title' in result
+        assert 'paper_id' in result
+        assert result['citation_count'] == 0
 
 
 class TestEdgeCasesForFullCoverage:
