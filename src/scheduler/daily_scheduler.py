@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.utils.logger import setup_logger
 # from src.scrapers.arxiv_scraper import ArxivScraper  # Disabled - incompatible with Python 3.6
 from src.scrapers.semantic_scholar_scraper import SemanticScholarScraper
+from src.scrapers.openalex_scraper import OpenAlexScraper
 from src.database.models import init_database
 from src.database.repository import PaperRepository
 from src.config.settings import Settings
@@ -29,37 +30,72 @@ class DailyPaperScheduler:
         init_database(self.settings.database_url)
         self.paper_repo = PaperRepository()
         
-        # Initialize scrapers with API key if available
-        # self.arxiv_scraper = ArxivScraper(self.logger, rate_limit_delay=1)  # Disabled
+        # Initialize scrapers with automatic fallback
+        # Primary: Semantic Scholar (with optional API key)
+        # Fallback: OpenAlex (free, no API key needed)
         ss_api_key = self.settings.SEMANTIC_SCHOLAR_API_KEY or None
         self.ss_scraper = SemanticScholarScraper(
             self.logger, 
             rate_limit_delay=3,
             api_key=ss_api_key
         )
+        self.openalex_scraper = OpenAlexScraper(self.logger, rate_limit_delay=1)
+        
         if ss_api_key:
             self.logger.info("Semantic Scholar API key configured - using higher rate limits")
         else:
-            self.logger.warning("No Semantic Scholar API key - using free tier (rate limited)")
+            self.logger.warning("No Semantic Scholar API key - will fallback to OpenAlex if rate limited")
     
     def fetch_and_store_papers(self):
-        """Fetch one high-impact paper per day for summarization"""
+        """Fetch one high-impact paper per day with automatic fallback"""
         try:
             self.logger.info("="*80)
             self.logger.info(f"STARTING DAILY PAPER FETCH - {datetime.now()}")
             self.logger.info("="*80)
             
-            # Strategy: Fetch citation-validated papers from Semantic Scholar
-            # Pick ONE paper per day that we haven't processed yet
-            self.logger.info("[1/3] Fetching citation-validated papers from Semantic Scholar...")
-            papers = self.ss_scraper.get_recent_papers(
-                keywords=self.settings.keywords,
-                days=180  # Papers from 2025 (current year)
-            )
+            # Strategy: Try Semantic Scholar first, fallback to OpenAlex if rate limited
+            papers = []
+            source_used = "unknown"
+            
+            # Try Semantic Scholar first
+            self.logger.info("[1/3] Attempting to fetch from Semantic Scholar...")
+            try:
+                papers = self.ss_scraper.get_recent_papers(
+                    keywords=self.settings.keywords,
+                    days=180  # Papers from current year
+                )
+                
+                if papers and len(papers) > 0:
+                    source_used = "semantic_scholar"
+                    self.logger.info(f"✓ Semantic Scholar: Retrieved {len(papers)} papers")
+                else:
+                    self.logger.warning("✗ Semantic Scholar returned 0 papers")
+            except Exception as e:
+                self.logger.warning(f"✗ Semantic Scholar failed: {e}")
+            
+            # Fallback to OpenAlex if Semantic Scholar failed or returned no papers
+            if not papers or len(papers) == 0:
+                self.logger.info("[1/3 FALLBACK] Switching to OpenAlex (free, no API key needed)...")
+                try:
+                    papers = self.openalex_scraper.get_recent_papers(
+                        keywords=self.settings.keywords,
+                        days=180
+                    )
+                    
+                    if papers and len(papers) > 0:
+                        source_used = "openalex"
+                        self.logger.info(f"✓ OpenAlex: Retrieved {len(papers)} papers")
+                    else:
+                        self.logger.error("✗ OpenAlex also returned 0 papers - both sources failed!")
+                        return 0, 0
+                except Exception as e:
+                    self.logger.error(f"✗ OpenAlex also failed: {e}")
+                    self.logger.error("Both Semantic Scholar and OpenAlex failed - cannot fetch papers")
+                    return 0, 0
             
             # Filter to top 100 by citations
             papers = papers[:100]
-            self.logger.info(f"Retrieved {len(papers)} papers (sorted by citations)")
+            self.logger.info(f"Using top {len(papers)} papers from {source_used} (sorted by citations)")
             
             # Step 2: Check which papers we already have in database (deduplication)
             self.logger.info("[2/3] Checking for duplicates...")
