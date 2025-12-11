@@ -29,9 +29,18 @@ class DailyPaperScheduler:
         init_database(self.settings.database_url)
         self.paper_repo = PaperRepository()
         
-        # Initialize scrapers
+        # Initialize scrapers with API key if available
         self.arxiv_scraper = ArxivScraper(self.logger, rate_limit_delay=1)
-        self.ss_scraper = SemanticScholarScraper(self.logger, rate_limit_delay=3)
+        ss_api_key = self.settings.SEMANTIC_SCHOLAR_API_KEY or None
+        self.ss_scraper = SemanticScholarScraper(
+            self.logger, 
+            rate_limit_delay=3,
+            api_key=ss_api_key
+        )
+        if ss_api_key:
+            self.logger.info("Semantic Scholar API key configured - using higher rate limits")
+        else:
+            self.logger.warning("No Semantic Scholar API key - using free tier (rate limited)")
     
     def fetch_and_store_papers(self):
         """Fetch one high-impact paper per day for summarization"""

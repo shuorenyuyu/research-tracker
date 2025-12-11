@@ -28,6 +28,9 @@ class Settings:
     # Lark Bot (飞书)
     LARK_WEBHOOK_URL = os.getenv("LARK_WEBHOOK_URL", "")
     
+    # Semantic Scholar API (for higher rate limits)
+    SEMANTIC_SCHOLAR_API_KEY = os.getenv("SEMANTIC_SCHOLAR_API_KEY", "")
+    
     # Scraping settings
     FETCH_LIMIT = int(os.getenv("FETCH_LIMIT", "50"))
     RATE_LIMIT_DELAY = int(os.getenv("RATE_LIMIT_DELAY", "3"))
