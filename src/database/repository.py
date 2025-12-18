@@ -3,6 +3,7 @@
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
+from sqlalchemy import func, or_, text
 from .models import Paper, get_session
 
 
@@ -11,6 +12,14 @@ class PaperRepository:
     
     def __init__(self, session: Session = None):
         self.session = session or get_session()
+
+    @staticmethod
+    def _normalize_title(title: Optional[str]) -> Optional[str]:
+        """Return a normalized title for duplicate checks"""
+        if not title:
+            return None
+        trimmed = title.strip()
+        return trimmed.lower() if trimmed else None
     
     def add_paper(self, paper_data: Dict[str, Any]) -> Paper:
         """Add a new paper to database"""
@@ -50,6 +59,18 @@ class PaperRepository:
         if source:
             query = query.filter(Paper.source == source)
         return query.first()
+
+    def is_duplicate(self, paper_id: Optional[str] = None, title: Optional[str] = None) -> bool:
+        """Check if a paper already exists by ID or normalized title"""
+        filters = []
+        if paper_id:
+            filters.append(Paper.paper_id == paper_id)
+        normalized_title = self._normalize_title(title)
+        if normalized_title:
+            filters.append(func.lower(func.trim(Paper.title)) == normalized_title)
+        if not filters:
+            return False
+        return self.session.query(Paper.id).filter(or_(*filters)).first() is not None
     
     def exists(self, paper_id: str) -> bool:
         """Check if paper exists in database"""
@@ -164,3 +185,56 @@ class PaperRepository:
         if limit:
             query = query.limit(limit)
         return query.all()
+
+    def _dedupe_by_partition(self, partition_expr, filters: List[Any]) -> int:
+        """Delete duplicate rows keeping the newest by fetched_at/id"""
+        subquery = (
+            self.session.query(
+                Paper.id.label("id"),
+                func.row_number()
+                .over(
+                    partition_by=partition_expr,
+                    order_by=[Paper.fetched_at.desc(), Paper.id.desc()]
+                )
+                .label("rn"),
+            )
+            .filter(*filters)
+            .subquery()
+        )
+
+        stale_ids = [row.id for row in self.session.query(subquery.c.id).filter(subquery.c.rn > 1)]
+        if not stale_ids:
+            return 0
+
+        self.session.query(Paper).filter(Paper.id.in_(stale_ids)).delete(synchronize_session=False)
+        self.session.commit()
+        return len(stale_ids)
+
+    def deduplicate(self) -> Dict[str, int]:
+        """Remove duplicates by paper_id and normalized title"""
+        removed_by_id = self._dedupe_by_partition(
+            partition_expr=Paper.paper_id,
+            filters=[Paper.paper_id.isnot(None), Paper.paper_id != ""]
+        )
+
+        removed_by_title = self._dedupe_by_partition(
+            partition_expr=func.lower(func.trim(Paper.title)),
+            filters=[Paper.title.isnot(None), Paper.title != ""]
+        )
+
+        return {
+            "removed_by_paper_id": removed_by_id,
+            "removed_by_title": removed_by_title,
+        }
+
+    def ensure_unique_paper_id_index(self) -> bool:
+        """Create a unique index on paper_id if it does not exist"""
+        try:
+            self.session.execute(
+                text("CREATE UNIQUE INDEX IF NOT EXISTS idx_papers_paper_id_unique ON papers(paper_id)")
+            )
+            self.session.commit()
+            return True
+        except Exception:
+            self.session.rollback()
+            return False

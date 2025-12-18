@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Test Azure OpenAI connection"""
 
+import pytest
+
+pytest.skip("Manual Azure connectivity check; skip during automated tests", allow_module_level=True)
+
 from openai import AzureOpenAI
 import sys
 import os

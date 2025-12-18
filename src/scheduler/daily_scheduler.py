@@ -52,6 +52,12 @@ class DailyPaperScheduler:
             self.logger.info("="*80)
             self.logger.info(f"STARTING DAILY PAPER FETCH - {datetime.now()}")
             self.logger.info("="*80)
+            cleanup = self.paper_repo.deduplicate()
+            if cleanup["removed_by_paper_id"] or cleanup["removed_by_title"]:
+                self.logger.info(
+                    f"Deduped existing records - by id: {cleanup['removed_by_paper_id']}, by title: {cleanup['removed_by_title']}"
+                )
+            self.paper_repo.ensure_unique_paper_id_index()
             
             # Strategy: Try Semantic Scholar first, fallback to OpenAlex if rate limited
             papers = []
@@ -64,7 +70,6 @@ class DailyPaperScheduler:
                     keywords=self.settings.keywords,
                     days=180  # Papers from current year
                 )
-                
                 if papers and len(papers) > 0:
                     source_used = "semantic_scholar"
                     self.logger.info(f"✓ Semantic Scholar: Retrieved {len(papers)} papers")
@@ -103,11 +108,10 @@ class DailyPaperScheduler:
             
             for paper in papers:
                 paper_id = paper.get('paper_id') or paper.get('semantic_scholar_id')
-                if paper_id:
-                    # Check if we already have this paper
-                    exists = self.paper_repo.get_by_paper_id(paper_id, paper.get('source'))
-                    if not exists:
-                        new_papers_to_add.append(paper)
+                title = paper.get('title')
+                if self.paper_repo.is_duplicate(paper_id=paper_id, title=title):
+                    continue
+                new_papers_to_add.append(paper)
             
             self.logger.info(f"Found {len(new_papers_to_add)} new papers not in database")
             
@@ -117,8 +121,6 @@ class DailyPaperScheduler:
             if not new_papers_to_add:
                 self.logger.info("No new papers found - all top papers already in database")
                 return 0, 0
-            
-            # Take the first (highest citation) new paper
             today_paper = new_papers_to_add[0]
             
             try:
