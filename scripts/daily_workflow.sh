@@ -17,7 +17,7 @@ echo "========================================"
 # Step 1: Fetch one high-quality paper
 echo ""
 echo "📥 Step 1: Fetching today's paper..."
-python3 src/scheduler/daily_scheduler.py --run-once
+venv/bin/python src/scheduler/daily_scheduler.py --run-once
 FETCH_STATUS=$?
 
 if [ $FETCH_STATUS -ne 0 ]; then
@@ -30,7 +30,7 @@ echo "✅ Paper fetch complete"
 # Step 2: Process unprocessed papers (generate summaries)
 echo ""
 echo "🤖 Step 2: Generating AI summaries..."
-python3 src/scheduler/process_papers.py --one
+venv/bin/python src/scheduler/process_papers.py --one
 PROCESS_STATUS=$?
 
 if [ $PROCESS_STATUS -ne 0 ]; then
@@ -42,7 +42,7 @@ echo "✅ Summary generation complete"
 # Step 3: Generate WeChat article
 echo ""
 echo "📝 Step 3: Generating WeChat article..."
-python3 scripts/generate_wechat_article.py
+venv/bin/python scripts/generate_wechat_article.py
 ARTICLE_STATUS=$?
 
 if [ $ARTICLE_STATUS -ne 0 ]; then
@@ -58,7 +58,7 @@ echo "✅ Daily workflow completed!"
 echo "Time: $(date)"
 echo ""
 echo "📊 Summary:"
-python3 -c "
+venv/bin/python -c "
 import sqlite3
 conn = sqlite3.connect('data/papers.db')
 c = conn.cursor()
