@@ -38,6 +38,7 @@ ENV/
 
 # Logs
 *.log
+*.log.zip
 
 # IDE
 .vscode/
@@ -57,6 +58,7 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+coverage.xml
 
 # Data files (PDFs, JSON, databases)
 data/*.pdf
@@ -67,5 +69,3 @@ data/logs/*.log
 # Generated WeChat articles
 data/wechat_articles/*.html
 data/wechat_articles/*.md
-ARCHITECTURE.md
-CHANGELOG.md
